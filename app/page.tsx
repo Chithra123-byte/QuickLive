@@ -5,6 +5,11 @@ import FloatingParticles from "../components/FloatingParticles";
 import FeatureCard from "../components/FeatureCard";
 import HowItWorks from "../components/HowItWorks";
 import LiveTerminal from "../components/LiveTerminal";
+import Stats from "../components/Stats";
+import Testimonials from "../components/Testimonials";
+import Pricing from "../components/Pricing";
+import CTA from "../components/CTA";
+
 
 export default function Home() {
   return (
@@ -19,6 +24,10 @@ export default function Home() {
   <FeatureCard/>
   <HowItWorks/>
   <LiveTerminal/>
+  <Stats/>
+  <Testimonials />
+  <Pricing />
+  <CTA/>
 </main>
   );
 }
