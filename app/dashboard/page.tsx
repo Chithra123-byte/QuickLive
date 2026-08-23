@@ -46,30 +46,14 @@ return (
       {/* Main Content */}
       <section className="flex-1 p-10">
 
+        {/* Header */}
         <div className="flex justify-between items-center">
 
           <div>
             <h2 className="text-4xl font-bold">
               Welcome back 👋
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
 
-  <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
-    <p className="text-gray-400">Projects</p>
-    <h3 className="text-4xl font-bold mt-2">3</h3>
-  </div>
-
-  <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
-    <p className="text-gray-400">Deployments</p>
-    <h3 className="text-4xl font-bold mt-2">24</h3>
-  </div>
-
-  <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
-    <p className="text-gray-400">Success Rate</p>
-    <h3 className="text-4xl font-bold mt-2 text-yellow-300">99%</h3>
-  </div>
-
-</div>
             <p className="text-gray-400 mt-2">
               {email}
             </p>
@@ -78,6 +62,77 @@ return (
           <button className="rounded-full bg-yellow-300 px-6 py-3 font-bold text-black hover:bg-yellow-400 transition">
             + New Project
           </button>
+
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+
+          <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
+            <p className="text-gray-400">Projects</p>
+            <h3 className="text-4xl font-bold mt-2">3</h3>
+          </div>
+
+          <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
+            <p className="text-gray-400">Deployments</p>
+            <h3 className="text-4xl font-bold mt-2">24</h3>
+          </div>
+
+          <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
+            <p className="text-gray-400">Success Rate</p>
+            <h3 className="text-4xl font-bold mt-2 text-yellow-300">
+              99%
+            </h3>
+          </div>
+
+        </div>
+
+        {/* Recent Projects */}
+        <div className="mt-14">
+
+          <h3 className="text-3xl font-bold mb-6">
+            Recent Projects
+          </h3>
+
+          <div className="space-y-5">
+
+            <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center">
+
+              <div>
+                <h4 className="text-xl font-bold">
+                  quicklive-landing
+                </h4>
+
+                <p className="text-gray-400 mt-1">
+                  Last deployed 2 minutes ago
+                </p>
+              </div>
+
+              <span className="rounded-full bg-green-500/20 px-4 py-2 text-green-400">
+                Live
+              </span>
+
+            </div>
+
+            <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center">
+
+              <div>
+                <h4 className="text-xl font-bold">
+                  portfolio-site
+                </h4>
+
+                <p className="text-gray-400 mt-1">
+                  Last deployed yesterday
+                </p>
+              </div>
+
+              <span className="rounded-full bg-yellow-300/20 px-4 py-2 text-yellow-300">
+                Building
+              </span>
+
+            </div>
+
+          </div>
 
         </div>
 
