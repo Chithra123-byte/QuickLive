@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import NewProjectModal from "../../components/NewProjectModal";
+
 export default function Dashboard() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [open,setOpen]=useState(false);
+  const [open, setOpen] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
   useEffect(() => {
     async function checkUser() {
       const { data } = await supabase.auth.getUser();
@@ -18,6 +23,17 @@ export default function Dashboard() {
       }
 
       setEmail(data.user.email || "");
+
+      const { data: projectData, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error) {
+        setProjects(projectData || []);
+      }
+
+      setLoadingProjects(false);
     }
 
     checkUser();
@@ -27,30 +43,40 @@ export default function Dashboard() {
     await supabase.auth.signOut();
     router.push("/");
   }
+
   async function handleCreateProject(project: {
-  name: string;
-  repo: string;
-  framework: string;
-}) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    name: string;
+    repo: string;
+    framework: string;
+  }) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) return;
+    if (!user) return;
 
-  const { error } = await supabase.from("projects").insert({
-    name: project.name,
-    repo: project.repo,
-    framework: project.framework,
-    user_id: user.id,
-  });
+    const { error } = await supabase.from("projects").insert({
+      name: project.name,
+      repo: project.repo,
+      framework: project.framework,
+      user_id: user.id,
+    });
 
-  if (error) {
-    alert(error.message);
-  } else {
-    alert("Project created successfully!");
+    if (error) {
+      alert(error.message);
+    } else {
+      // Refresh project list immediately
+      const { data: projectData } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      setProjects(projectData || []);
+      setOpen(false);
+
+      alert("Project created successfully!");
+    }
   }
-}
 
   return (
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -98,17 +124,20 @@ export default function Dashboard() {
             </div>
 
             <button
-  onClick={() => setOpen(true)}
-  className="rounded-full bg-yellow-300 px-6 py-3 font-bold text-black hover:bg-yellow-400 transition">
-  + New Project
-</button>
+              onClick={() => setOpen(true)}
+              className="rounded-full bg-yellow-300 px-6 py-3 font-bold text-black hover:bg-yellow-400 transition"
+            >
+              + New Project
+            </button>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
               <p className="text-gray-400">Projects</p>
-              <h3 className="text-4xl font-bold mt-2">3</h3>
+              <h3 className="text-4xl font-bold mt-2">
+                {loadingProjects ? "..." : projects.length}
+              </h3>
             </div>
 
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
@@ -118,7 +147,9 @@ export default function Dashboard() {
 
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
               <p className="text-gray-400">Success Rate</p>
-              <h3 className="text-4xl font-bold mt-2 text-yellow-300">99%</h3>
+              <h3 className="text-4xl font-bold mt-2 text-yellow-300">
+                99%
+              </h3>
             </div>
           </div>
 
@@ -127,40 +158,43 @@ export default function Dashboard() {
             <h3 className="text-3xl font-bold mb-6">Recent Projects</h3>
 
             <div className="space-y-5">
-              <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center">
-                <div>
-                  <h4 className="text-xl font-bold">quicklive-landing</h4>
-                  <p className="text-gray-400 mt-1">
-                    Last deployed 2 minutes ago
-                  </p>
-                </div>
+              {loadingProjects ? (
+                <p className="text-gray-400">Loading projects...</p>
+              ) : projects.length === 0 ? (
+                <p className="text-gray-500">No projects yet.</p>
+              ) : (
+                projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center"
+                  >
+                    <div>
+                      <h4 className="text-xl font-bold">{project.name}</h4>
+                      <p className="text-gray-400 mt-1">{project.repo}</p>
 
-                <span className="rounded-full bg-green-500/20 px-4 py-2 text-green-400">
-                  Live
-                </span>
-              </div>
+                      <div className="mt-3">
+                        <span className="rounded-full bg-yellow-300/20 px-3 py-1 text-sm text-yellow-300">
+                          {project.framework}
+                        </span>
+                      </div>
+                    </div>
 
-              <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center">
-                <div>
-                  <h4 className="text-xl font-bold">portfolio-site</h4>
-                  <p className="text-gray-400 mt-1">
-                    Last deployed yesterday
-                  </p>
-                </div>
-
-                <span className="rounded-full bg-yellow-300/20 px-4 py-2 text-yellow-300">
-                  Building
-                </span>
-              </div>
+                    <span className="rounded-full bg-green-500/20 px-4 py-2 text-green-400">
+                      {project.status}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
       </div>
+
       <NewProjectModal
-  open={open}
-  onClose={() => setOpen(false)}
-  onCreate={handleCreateProject}
-  />
-  </main>
+        open={open}
+        onClose={() => setOpen(false)}
+        onCreate={handleCreateProject}
+      />
+    </main>
   );
 }
