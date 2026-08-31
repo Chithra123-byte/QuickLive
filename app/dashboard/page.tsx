@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import NewProjectModal from "../../components/NewProjectModal";
 import RepositoryModal from "../../components/RepositoryModal";
+import DeployModal from "../../components/DeployModal";
 export default function Dashboard() {
   const router = useRouter();
 
@@ -17,57 +18,83 @@ export default function Dashboard() {
   const [repos, setRepos] = useState<any[]>([]);
   const [repoModalOpen, setRepoModalOpen] = useState(false);
   const [loadingRepos, setLoadingRepos] = useState(true);
-  useEffect(() => {
-    async function checkUser() {
-      const { data } = await supabase.auth.getUser();
+  const [selectedRepo, setSelectedRepo] = useState<any>(null);
+  const [deployModalOpen, setDeployModalOpen] = useState(false);
+  const [deployments, setDeployments] = useState<any[]>([]);
+const [loadingDeployments, setLoadingDeployments] = useState(true);
+useEffect(() => {
+  async function checkUser() {
+    const { data } = await supabase.auth.getUser();
 
-      if (!data.user) {
-        router.push("/login");
-        return;
-      }
-
-      setEmail(data.user.email || "");
-      const hasGithub = data.user.identities?.some(
-  (identity) => identity.provider === "github"
-);
-
-setGithubConnected(!!hasGithub);
-const githubIdentity = data.user.identities?.find(
-  (identity) => identity.provider === "github"
-);
-
-setGithubUsername(
-  githubIdentity?.identity_data?.user_name ||
-  githubIdentity?.identity_data?.preferred_username ||
-  ""
-);
-      const { data: projectData, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error) {
-        setProjects(projectData || []);
-      }
-
-      setLoadingProjects(false);
+    if (!data.user) {
+      router.push("/login");
+      return;
     }
 
-    checkUser();
-  }, [router]);
+    setEmail(data.user.email || "");
+
+    // GitHub connection
+    const hasGithub = data.user.identities?.some(
+      (identity) => identity.provider === "github"
+    );
+    setGithubConnected(!!hasGithub);
+
+    const githubIdentity = data.user.identities?.find(
+      (identity) => identity.provider === "github"
+    );
+
+    setGithubUsername(
+      githubIdentity?.identity_data?.user_name ||
+      githubIdentity?.identity_data?.preferred_username ||
+      ""
+    );
+
+    // Fetch Projects
+    const { data: projectData, error: projectError } = await supabase
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!projectError) {
+      setProjects(projectData || []);
+    }
+
+    // Fetch Deployments
+    const { data: deploymentData, error: deploymentError } = await supabase
+      .from("deployments")
+      .select("*")
+      .eq("user_id", data.user.id)
+      .order("created_at", { ascending: false });
+
+    if (!deploymentError) {
+      setDeployments(deploymentData || []);
+    }
+
+    setLoadingDeployments(false);
+
+    // Fetch GitHub repositories
+    await fetchRepos();
+
+    setLoadingProjects(false);
+  }
+
+  checkUser();
+}, [router]);
 
   async function logout() {
     await supabase.auth.signOut();
     router.push("/");
   }
   async function connectGitHub() {
-  const res = await fetch("/api/github/repos");
-  const data = await res.json();
+  try {
+    await fetchRepos(); // Load repositories
 
-  setRepos(data);
-  setGithubConnected(true);
+    setGithubConnected(true);
+  } catch (err) {
+    console.error("GitHub connection failed:", err);
+    alert("Unable to load GitHub repositories.");
+  }
 }
-
   async function handleCreateProject(project: {
     name: string;
     repo: string;
@@ -101,6 +128,7 @@ setGithubUsername(
       alert("Project created successfully!");
     }
   }
+  
   const fetchRepos = async () => {
   try {
     const res = await fetch("/api/github/repos");
@@ -109,7 +137,18 @@ setGithubUsername(
       throw new Error(`API Error: ${res.status}`);
     }
 
-    const data = await res.json();
+    const text = await res.text();
+
+let data;
+try {
+  data = text ? JSON.parse(text) : {};
+} catch {
+  throw new Error("Invalid response from /api/deploy");
+}
+
+if (!res.ok) {
+  throw new Error(data.error || `API Error: ${res.status}`);
+}
     setRepos(data);
   } catch (err) {
     console.error("Failed to fetch repos:", err);
@@ -139,35 +178,24 @@ setGithubUsername(
             <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
               Projects
             </div>
-            <div className="mt-8">
-  <h2 className="mb-4 text-2xl font-bold">GitHub Repositories</h2>
+            
+<nav className="mt-12 space-y-4">
+  <div className="rounded-xl bg-yellow-300 text-black px-4 py-3 font-semibold">
+    Dashboard
+  </div>
 
-  {loadingRepos ? (
-    <p className="text-zinc-400">Loading repositories...</p>
-  ) : (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {repos.map((repo: any) => (
-        <div key={repo.name} className="rounded-xl border border-zinc-800 p-4">
-          <h3 className="font-semibold">{repo.name}</h3>
-          <p className="text-sm text-zinc-400">{repo.language || "No language"}</p>
+  <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
+    Projects
+  </div>
 
-          <div className="mt-2 flex items-center justify-between">
-            <span>⭐ {repo.stars}</span>
-            <a
-              href={repo.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-yellow-400 hover:underline"
-            >
-              View Repo
-            </a>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+  <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
+    Deployments
+  </div>
 
+  <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
+    Settings
+  </div>
+</nav>
             <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
               Deployments
             </div>
@@ -207,11 +235,14 @@ setGithubUsername(
   </button>
 
   <button
-    onClick={() => setRepoModalOpen(true)}
-    className="rounded-full border border-yellow-300/30 px-6 py-3 text-yellow-300 hover:bg-yellow-300 hover:text-black transition"
-  >
-    Import Repository
-  </button>
+  onClick={async () => {
+    await fetchRepos();
+    setRepoModalOpen(true);
+  }}
+  className="rounded-full border border-yellow-300/30 px-6 py-3 text-yellow-300 hover:bg-yellow-300 hover:text-black transition"
+>
+  Import Repository
+</button>
 
   <button
     onClick={() => setOpen(true)}
@@ -232,7 +263,9 @@ setGithubUsername(
 
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
               <p className="text-gray-400">Deployments</p>
-              <h3 className="text-4xl font-bold mt-2">24</h3>
+              <h3 className="text-4xl font-bold mt-2">
+  {loadingDeployments ? "..." : deployments.length}
+</h3>
             </div>
 
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
@@ -296,6 +329,48 @@ setGithubUsername(
   </div>
 </div>
 
+{/* GitHub Repositories */}
+<div className="mt-12">
+  <div className="mb-6 flex items-center justify-between">
+    <h3 className="text-3xl font-bold">GitHub Repositories</h3>
+
+    <span className="rounded-full bg-yellow-300/10 px-4 py-2 text-sm text-yellow-300">
+      {repos.length} Repositories
+    </span>
+  </div>
+
+  {loadingRepos ? (
+    <p className="text-gray-400">Loading repositories...</p>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {repos.map((repo: any) => (
+        <div
+          key={repo.id}
+          className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 hover:border-yellow-300/50 hover:bg-[#161616] transition"
+        >
+          <h4 className="text-lg font-bold">{repo.name}</h4>
+
+          <p className="mt-2 text-sm text-gray-400">
+            {repo.language || "No language"}
+          </p>
+
+          <div className="mt-5 flex items-center justify-between">
+            <span className="text-yellow-300">⭐ {repo.stars}</span>
+
+            <a
+              href={repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-yellow-300 hover:underline"
+            >
+              View Repo →
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
           {/* Recent Projects */}
           <div className="mt-14">
             <h3 className="text-3xl font-bold mb-6">Recent Projects</h3>
@@ -330,6 +405,53 @@ setGithubUsername(
               )}
             </div>
           </div>
+          {/* Recent Deployments */}
+<div className="mt-14">
+  <h3 className="text-3xl font-bold mb-6">Recent Deployments</h3>
+
+  <div className="space-y-5">
+    {loadingDeployments ? (
+      <p className="text-gray-400">Loading deployments...</p>
+    ) : deployments.length === 0 ? (
+      <p className="text-gray-500">No deployments yet.</p>
+    ) : (
+      deployments.map((deployment) => (
+        <div
+          key={deployment.id}
+          className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center"
+        >
+          <div>
+            <h4 className="text-xl font-bold">
+              {deployment.project_name}
+            </h4>
+
+            <p className="text-gray-400 mt-1">
+              {deployment.repo}
+            </p>
+
+            <div className="mt-3">
+              <span className="rounded-full bg-yellow-300/20 px-3 py-1 text-sm text-yellow-300">
+                {deployment.framework}
+              </span>
+            </div>
+          </div>
+
+          <span
+            className={`rounded-full px-4 py-2 ${
+              deployment.status === "Live"
+                ? "bg-green-500/20 text-green-400"
+                : deployment.status === "Deploying"
+                ? "bg-blue-500/20 text-blue-400"
+                : "bg-yellow-500/20 text-yellow-400"
+            }`}
+          >
+            {deployment.status}
+          </span>
+        </div>
+      ))
+    )}
+  </div>
+</div>
         </section>
      
       </div>
@@ -343,9 +465,15 @@ setGithubUsername(
   repos={repos}
   onClose={() => setRepoModalOpen(false)}
   onSelect={(repo) => {
-    console.log(repo);
-    setRepoModalOpen(false);
-  }}
+  setSelectedRepo(repo);
+  setRepoModalOpen(false);
+  setDeployModalOpen(true);
+}}
+/>
+<DeployModal
+  open={deployModalOpen}
+  repo={selectedRepo}
+  onClose={() => setDeployModalOpen(false)}
 />
  
     </main>

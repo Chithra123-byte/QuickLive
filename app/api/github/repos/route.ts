@@ -18,11 +18,12 @@ export async function GET() {
 
   return Response.json(
   repos.map((repo: any) => ({
+    id: repo.id,
     name: repo.name,
     full_name: repo.full_name,
-    html_url: repo.html_url,
+    private: repo.private,
     url: repo.html_url,
     stars: repo.stargazers_count,
     language: repo.language,
   }))
-);
+)};
