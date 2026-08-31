@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import NewProjectModal from "../../components/NewProjectModal";
-
+import RepositoryModal from "../../components/RepositoryModal";
 export default function Dashboard() {
   const router = useRouter();
 
@@ -13,7 +13,10 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [githubConnected, setGithubConnected] = useState(false);
- const [githubUsername, setGithubUsername] = useState("");
+  const [githubUsername, setGithubUsername] = useState("");
+  const [repos, setRepos] = useState<any[]>([]);
+  const [repoModalOpen, setRepoModalOpen] = useState(false);
+  const [loadingRepos, setLoadingRepos] = useState(true);
   useEffect(() => {
     async function checkUser() {
       const { data } = await supabase.auth.getUser();
@@ -58,16 +61,11 @@ setGithubUsername(
     router.push("/");
   }
   async function connectGitHub() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "github",
-    options: {
-      redirectTo: "http://localhost:3000/dashboard",
-    },
-  });
+  const res = await fetch("/api/github/repos");
+  const data = await res.json();
 
-  if (error) {
-    alert(error.message);
-  }
+  setRepos(data);
+  setGithubConnected(true);
 }
 
   async function handleCreateProject(project: {
@@ -103,6 +101,23 @@ setGithubUsername(
       alert("Project created successfully!");
     }
   }
+  const fetchRepos = async () => {
+  try {
+    const res = await fetch("/api/github/repos");
+
+    if (!res.ok) {
+      throw new Error(`API Error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    setRepos(data);
+  } catch (err) {
+    console.error("Failed to fetch repos:", err);
+    setRepos([]);
+  } finally {
+    setLoadingRepos(false);
+  }
+};
 
   return (
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -119,10 +134,39 @@ setGithubUsername(
             <div className="rounded-xl bg-yellow-300 text-black px-4 py-3 font-semibold">
               Dashboard
             </div>
+            
 
             <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
               Projects
             </div>
+            <div className="mt-8">
+  <h2 className="mb-4 text-2xl font-bold">GitHub Repositories</h2>
+
+  {loadingRepos ? (
+    <p className="text-zinc-400">Loading repositories...</p>
+  ) : (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {repos.map((repo: any) => (
+        <div key={repo.name} className="rounded-xl border border-zinc-800 p-4">
+          <h3 className="font-semibold">{repo.name}</h3>
+          <p className="text-sm text-zinc-400">{repo.language || "No language"}</p>
+
+          <div className="mt-2 flex items-center justify-between">
+            <span>⭐ {repo.stars}</span>
+            <a
+              href={repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-yellow-400 hover:underline"
+            >
+              View Repo
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
             <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
               Deployments
@@ -150,27 +194,33 @@ setGithubUsername(
             </div>
 
             <div className="flex gap-4">
-              <button
-  onClick={!githubConnected ? connectGitHub : undefined}
-  disabled={githubConnected}
-  className={`rounded-full px-6 py-3 font-medium transition ${
-    githubConnected
-      ? "bg-green-500/20 text-green-400 border border-green-500/30 cursor-default"
-      : "border border-yellow-300/30 text-yellow-300 hover:bg-yellow-300 hover:text-black"
-  }`}
->
-  {githubConnected ? "GitHub Connected ✓" : "Connect GitHub"}
-</button>
+  <button
+    onClick={!githubConnected ? connectGitHub : undefined}
+    disabled={githubConnected}
+    className={`rounded-full px-6 py-3 font-medium transition ${
+      githubConnected
+        ? "bg-green-500/20 text-green-400 border border-green-500/30 cursor-default"
+        : "border border-yellow-300/30 text-yellow-300 hover:bg-yellow-300 hover:text-black"
+    }`}
+  >
+    {githubConnected ? "GitHub Connected ✓" : "Connect GitHub"}
+  </button>
 
-              <button
-                onClick={() => setOpen(true)}
-                className="rounded-full bg-yellow-300 px-6 py-3 font-bold text-black hover:bg-yellow-400 transition"
-              >
-                + New Project
-              </button>
-            </div>
-          </div>
+  <button
+    onClick={() => setRepoModalOpen(true)}
+    className="rounded-full border border-yellow-300/30 px-6 py-3 text-yellow-300 hover:bg-yellow-300 hover:text-black transition"
+  >
+    Import Repository
+  </button>
 
+  <button
+    onClick={() => setOpen(true)}
+    className="rounded-full bg-yellow-300 px-6 py-3 font-bold text-black hover:bg-yellow-400 transition"
+  >
+    + New Project
+  </button>
+</div>
+</div>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
@@ -281,13 +331,23 @@ setGithubUsername(
             </div>
           </div>
         </section>
+     
       </div>
-
       <NewProjectModal
         open={open}
         onClose={() => setOpen(false)}
         onCreate={handleCreateProject}
       />
+      <RepositoryModal
+  open={repoModalOpen}
+  repos={repos}
+  onClose={() => setRepoModalOpen(false)}
+  onSelect={(repo) => {
+    console.log(repo);
+    setRepoModalOpen(false);
+  }}
+/>
+ 
     </main>
   );
 }
