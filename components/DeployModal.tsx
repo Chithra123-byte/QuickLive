@@ -7,9 +7,15 @@ type Props = {
   open: boolean;
   repo: any;
   onClose: () => void;
+  onDeployed: () => void;
 };
 
-export default function DeployModal({ open, repo, onClose }: Props) {
+export default function DeployModal({
+  open,
+  repo,
+  onClose,
+  onDeployed,
+}: Props) {
   const [framework, setFramework] = useState("Next.js");
   const [deploying, setDeploying] = useState(false);
 
@@ -48,6 +54,11 @@ export default function DeployModal({ open, repo, onClose }: Props) {
       }
 
       alert("Deployment started!");
+
+      // Refresh dashboard deployment list
+      onDeployed();
+
+      // Close modal
       onClose();
     } catch (err: any) {
       alert(err.message);
@@ -59,7 +70,6 @@ export default function DeployModal({ open, repo, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="w-full max-w-xl rounded-3xl border border-yellow-300/20 bg-[#111111] p-8">
-
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-3xl font-bold text-yellow-300">
@@ -68,7 +78,7 @@ export default function DeployModal({ open, repo, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-xl"
+            className="text-xl text-gray-400 hover:text-white"
           >
             ✕
           </button>
@@ -76,7 +86,6 @@ export default function DeployModal({ open, repo, onClose }: Props) {
 
         {/* Content */}
         <div className="space-y-5">
-
           <div>
             <p className="text-sm text-gray-400">Repository</p>
             <p className="font-semibold">{repo.full_name}</p>

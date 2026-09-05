@@ -33,7 +33,6 @@ useEffect(() => {
 
     setEmail(data.user.email || "");
 
-    // GitHub connection
     const hasGithub = data.user.identities?.some(
       (identity) => identity.provider === "github"
     );
@@ -45,11 +44,10 @@ useEffect(() => {
 
     setGithubUsername(
       githubIdentity?.identity_data?.user_name ||
-      githubIdentity?.identity_data?.preferred_username ||
-      ""
+        githubIdentity?.identity_data?.preferred_username ||
+        ""
     );
 
-    // Fetch Projects
     const { data: projectData, error: projectError } = await supabase
       .from("projects")
       .select("*")
@@ -59,20 +57,7 @@ useEffect(() => {
       setProjects(projectData || []);
     }
 
-    // Fetch Deployments
-    const { data: deploymentData, error: deploymentError } = await supabase
-      .from("deployments")
-      .select("*")
-      .eq("user_id", data.user.id)
-      .order("created_at", { ascending: false });
-
-    if (!deploymentError) {
-      setDeployments(deploymentData || []);
-    }
-
-    setLoadingDeployments(false);
-
-    // Fetch GitHub repositories
+    await loadDeployments();
     await fetchRepos();
 
     setLoadingProjects(false);
@@ -128,27 +113,47 @@ useEffect(() => {
       alert("Project created successfully!");
     }
   }
-  
-  const fetchRepos = async () => {
+
+const loadDeployments = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  console.log("Logged in user:", user.id);
+
+  setLoadingDeployments(true);
+
+  const { data, error } = await supabase
+    .from("deployments")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  console.log("Deployments:", data);
+  console.log("Supabase Error:", error);
+
+  if (error) {
+    console.error(error);
+    setDeployments([]);
+  } else {
+    setDeployments(data || []);
+  }
+
+  setLoadingDeployments(false);
+};
+const fetchRepos = async () => {
   try {
     const res = await fetch("/api/github/repos");
 
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : [];
+
     if (!res.ok) {
-      throw new Error(`API Error: ${res.status}`);
+      throw new Error(data.error || `API Error: ${res.status}`);
     }
 
-    const text = await res.text();
-
-let data;
-try {
-  data = text ? JSON.parse(text) : {};
-} catch {
-  throw new Error("Invalid response from /api/deploy");
-}
-
-if (!res.ok) {
-  throw new Error(data.error || `API Error: ${res.status}`);
-}
     setRepos(data);
   } catch (err) {
     console.error("Failed to fetch repos:", err);
@@ -157,7 +162,6 @@ if (!res.ok) {
     setLoadingRepos(false);
   }
 };
-
   return (
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Background Glow */}
@@ -179,23 +183,7 @@ if (!res.ok) {
               Projects
             </div>
             
-<nav className="mt-12 space-y-4">
-  <div className="rounded-xl bg-yellow-300 text-black px-4 py-3 font-semibold">
-    Dashboard
-  </div>
 
-  <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
-    Projects
-  </div>
-
-  <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
-    Deployments
-  </div>
-
-  <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
-    Settings
-  </div>
-</nav>
             <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
               Deployments
             </div>
@@ -261,12 +249,13 @@ if (!res.ok) {
               </h3>
             </div>
 
-            <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
-              <p className="text-gray-400">Deployments</p>
-              <h3 className="text-4xl font-bold mt-2">
-  {loadingDeployments ? "..." : deployments.length}
-</h3>
-            </div>
+         <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
+  <p className="text-gray-400">Deployments</p>
+
+  <h3 className="text-4xl font-bold mt-2">
+    {loadingDeployments ? "..." : deployments.length}
+  </h3>
+</div>
 
             <div className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6">
               <p className="text-gray-400">Success Rate</p>
@@ -371,111 +360,91 @@ if (!res.ok) {
     </div>
   )}
 </div>
-          {/* Recent Projects */}
-          <div className="mt-14">
-            <h3 className="text-3xl font-bold mb-6">Recent Projects</h3>
-
-            <div className="space-y-5">
-              {loadingProjects ? (
-                <p className="text-gray-400">Loading projects...</p>
-              ) : projects.length === 0 ? (
-                <p className="text-gray-500">No projects yet.</p>
-              ) : (
-                projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center"
-                  >
-                    <div>
-                      <h4 className="text-xl font-bold">{project.name}</h4>
-                      <p className="text-gray-400 mt-1">{project.repo}</p>
-
-                      <div className="mt-3">
-                        <span className="rounded-full bg-yellow-300/20 px-3 py-1 text-sm text-yellow-300">
-                          {project.framework}
-                        </span>
-                      </div>
-                    </div>
-
-                    <span className="rounded-full bg-green-500/20 px-4 py-2 text-green-400">
-                      {project.status}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-          {/* Recent Deployments */}
 <div className="mt-14">
-  <h3 className="text-3xl font-bold mb-6">Recent Deployments</h3>
+  <div className="flex items-center justify-between mb-6">
+    <h3 className="text-3xl font-bold">Deployment History</h3>
 
-  <div className="space-y-5">
-    {loadingDeployments ? (
-      <p className="text-gray-400">Loading deployments...</p>
-    ) : deployments.length === 0 ? (
-      <p className="text-gray-500">No deployments yet.</p>
-    ) : (
-      deployments.map((deployment) => (
+    <button
+      onClick={loadDeployments}
+      className="rounded-full border border-yellow-300/30 px-4 py-2 text-yellow-300 hover:bg-yellow-300 hover:text-black transition"
+    >
+      Refresh
+    </button>
+  </div>
+
+  {loadingDeployments ? (
+    <p className="text-gray-400">Loading deployments...</p>
+  ) : deployments.length === 0 ? (
+    <p className="text-gray-500">No deployments yet.</p>
+  ) : (
+    <div className="space-y-5">
+      {deployments.map((deployment) => (
         <div
           key={deployment.id}
-          className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6 flex justify-between items-center"
+          className="rounded-2xl border border-yellow-300/20 bg-[#111111] p-6"
         >
-          <div>
-            <h4 className="text-xl font-bold">
-              {deployment.project_name}
-            </h4>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xl font-bold">
+                {deployment.project_name}
+              </h4>
 
-            <p className="text-gray-400 mt-1">
-              {deployment.repo}
-            </p>
+              <p className="text-gray-400 mt-1">
+                {deployment.repo}
+              </p>
 
-            <div className="mt-3">
-              <span className="rounded-full bg-yellow-300/20 px-3 py-1 text-sm text-yellow-300">
-                {deployment.framework}
-              </span>
+              <div className="mt-3 flex gap-2">
+                <span className="rounded-full bg-yellow-300/20 px-3 py-1 text-sm text-yellow-300">
+                  {deployment.framework}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <span
-            className={`rounded-full px-4 py-2 ${
-              deployment.status === "Live"
-                ? "bg-green-500/20 text-green-400"
-                : deployment.status === "Deploying"
-                ? "bg-blue-500/20 text-blue-400"
-                : "bg-yellow-500/20 text-yellow-400"
-            }`}
-          >
-            {deployment.status}
-          </span>
+            <span
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                deployment.status === "Live"
+                  ? "bg-green-500/20 text-green-400"
+                  : deployment.status === "Deploying"
+                  ? "bg-blue-500/20 text-blue-400"
+                  : deployment.status === "Building"
+                  ? "bg-yellow-500/20 text-yellow-300"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
+              {deployment.status}
+            </span>
+          </div>
         </div>
-      ))
-    )}
-  </div>
+      ))}
+    </div>
+  )}
 </div>
-        </section>
-     
-      </div>
+</section>
+ </div>
+
       <NewProjectModal
         open={open}
         onClose={() => setOpen(false)}
         onCreate={handleCreateProject}
       />
+
       <RepositoryModal
-  open={repoModalOpen}
-  repos={repos}
-  onClose={() => setRepoModalOpen(false)}
-  onSelect={(repo) => {
-  setSelectedRepo(repo);
-  setRepoModalOpen(false);
-  setDeployModalOpen(true);
-}}
-/>
-<DeployModal
+        open={repoModalOpen}
+        repos={repos}
+        onClose={() => setRepoModalOpen(false)}
+        onSelect={(repo) => {
+          setSelectedRepo(repo);
+          setRepoModalOpen(false);
+          setDeployModalOpen(true);
+        }}
+      />
+
+      <DeployModal
   open={deployModalOpen}
   repo={selectedRepo}
   onClose={() => setDeployModalOpen(false)}
+  onDeployed={loadDeployments}
 />
- 
     </main>
   );
 }
