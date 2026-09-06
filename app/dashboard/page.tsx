@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import NewProjectModal from "../../components/NewProjectModal";
 import RepositoryModal from "../../components/RepositoryModal";
 import DeployModal from "../../components/DeployModal";
+import Link from "next/link";
 export default function Dashboard() {
   const router = useRouter();
 
@@ -170,36 +171,35 @@ const fetchRepos = async () => {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-yellow-300/10 min-h-screen p-6">
-          <h1 className="text-3xl font-bold text-yellow-300">QuickLive</h1>
+       <nav className="mt-12 space-y-4">
+  <Link
+    href="/dashboard"
+    className="block rounded-xl bg-yellow-300 text-black px-4 py-3 font-semibold"
+  >
+    Dashboard
+  </Link>
 
-          <nav className="mt-12 space-y-4">
-            <div className="rounded-xl bg-yellow-300 text-black px-4 py-3 font-semibold">
-              Dashboard
-            </div>
-            
+  <Link
+    href="/dashboard/projects"
+    className="block rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5"
+  >
+    Projects
+  </Link>
 
-            <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
-              Projects
-            </div>
-            
+  <Link
+    href="/dashboard/deployments"
+    className="block rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5"
+  >
+    Deployments
+  </Link>
 
-            <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
-              Deployments
-            </div>
-
-            <div className="rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 cursor-pointer">
-              Settings
-            </div>
-          </nav>
-
-          <button
-            onClick={logout}
-            className="mt-16 w-full rounded-full border border-yellow-300/30 py-3 text-yellow-300 hover:bg-yellow-300 hover:text-black transition"
-          >
-            Logout
-          </button>
-        </aside>
+  <Link
+    href="/dashboard/settings"
+    className="block rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5"
+  >
+    Settings
+  </Link>
+</nav>
 
         {/* Main Content */}
         <section className="flex-1 p-10">
