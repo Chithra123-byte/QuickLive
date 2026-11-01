@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -33,7 +34,7 @@ export default function HowItWorks() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <p className="text-yellow-300 font-semibold uppercase tracking-widest">
+          <p className="inline-flex items-center justify-center rounded-full bg-yellow-300 px-5 py-2 font-semibold text-black transition hover:scale-105 hover:shadow-lg hover:shadow-yellow-300/40">
             How it Works
           </p>
 

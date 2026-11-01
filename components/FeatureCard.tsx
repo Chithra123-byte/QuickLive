@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -33,7 +34,7 @@ export default function FeatureCard() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <p className="text-yellow-300 font-semibold uppercase tracking-wider">
+          <p className="inline-flex items-center justify-center rounded-full bg-yellow-300 px-6 py-3 font-bold text-black transition hover:bg-yellow-400">
             Features
           </p>
 
