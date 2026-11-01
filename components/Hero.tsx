@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function Hero() {
@@ -25,14 +26,20 @@ export default function Hero() {
             live builds with a beautiful DevOps platform.
           </p>
 
-          <div className="mt-8 flex gap-4">
-            <button className="rounded-full bg-yellow-300 px-8 py-3 font-bold text-black hover:scale-105 hover:shadow-[0_0_30px_rgba(250,204,21,0.6)] transition">
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link
+              href="/login"
+              className="rounded-full bg-yellow-300 px-8 py-3 font-bold text-black transition hover:scale-105 hover:shadow-[0_0_30px_rgba(250,204,21,0.6)]"
+            >
               Start Free
-            </button>
+            </Link>
 
-            <button className="rounded-full border border-yellow-300/30 px-8 py-3 hover:bg-yellow-300/10 transition">
+            <a
+              href="#how-it-works"
+              className="rounded-full border border-yellow-300/30 px-8 py-3 transition hover:bg-yellow-300/10"
+            >
               Watch Demo
-            </button>
+            </a>
           </div>
         </motion.div>
 
@@ -57,7 +64,6 @@ export default function Hero() {
             </div>
 
             <div className="space-y-4">
-
               <div>
                 <p className="mb-2 text-sm text-gray-400">Building...</p>
 
@@ -68,7 +74,7 @@ export default function Hero() {
                     transition={{
                       duration: 2,
                       repeat: Infinity,
-                      repeatType: "reverse"
+                      repeatType: "reverse",
                     }}
                     className="h-full rounded-full bg-yellow-300"
                   />
@@ -88,7 +94,6 @@ export default function Hero() {
                   quicklive.app/demo
                 </p>
               </div>
-
             </div>
           </div>
         </motion.div>

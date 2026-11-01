@@ -21,15 +21,26 @@ export default function Home() {
   <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-yellow-300/10 blur-[150px]" />
 
   <Navbar />
-  <Hero />
-  <FeatureCard/>
-  <HowItWorks/>
-  <LiveTerminal/>
-  <Stats/>
-  <Testimonials />
+<Hero />
+
+<div id="features">
+  <FeatureCard />
+</div>
+
+<div id="how-it-works">
+  <HowItWorks />
+</div>
+
+<LiveTerminal />
+<Stats />
+<Testimonials />
+
+<div id="pricing">
   <Pricing />
-  <CTA/>
-  <Footer/>
+</div>
+
+<CTA />
+<Footer />
 </main>
   );
 }

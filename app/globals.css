@@ -1,26 +1,64 @@
 @import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --background: #ffffff;
+    --foreground: #171717;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+     :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* QuickLive Golden Floating Particles */
+
+.quicklive-particle {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    background: #ffdf00;
+    box-shadow: 0 0 6px #ffdf00, 0 0 14px rgba(255, 223, 0, 0.8), 0 0 28px rgba(255, 200, 0, 0.35);
+    opacity: 0;
+    animation: goldenParticleFloat 9s ease-in-out infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes goldenParticleFloat {
+    0% {
+        transform: translate3d(0, 30px, 0) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate3d(25px, -35px, 0) scale(1.2);
+        opacity: 1;
+    }
+    75% {
+        opacity: 0.65;
+    }
+    100% {
+        transform: translate3d(-20px, -90px, 0) scale(0.6);
+        opacity: 0;
+    }
+}
+
+html {
+    scroll-behavior: smooth;
 }

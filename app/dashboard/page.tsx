@@ -7,6 +7,7 @@ import NewProjectModal from "../../components/NewProjectModal";
 import RepositoryModal from "../../components/RepositoryModal";
 import DeployModal from "../../components/DeployModal";
 import Link from "next/link";
+import FloatingParticles from "../../components/FloatingParticles";
 export default function Dashboard() {
   const router = useRouter();
 
@@ -165,11 +166,18 @@ const fetchRepos = async () => {
 };
   return (
     <main className="min-h-screen bg-black text-white relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-20 left-20 h-72 w-72 rounded-full bg-yellow-400/10 blur-[120px]" />
-      <div className="absolute bottom-20 right-20 h-96 w-96 rounded-full bg-yellow-300/10 blur-[150px]" />
 
-      <div className="flex">
+  {/* Golden Floating Particles */}
+  <div className="absolute inset-0 z-0 pointer-events-none">
+    <FloatingParticles />
+  </div>
+
+  {/* Background Glow */}
+  <div className="absolute top-20 left-20 h-72 w-72 rounded-full bg-yellow-400/10 blur-[120px] pointer-events-none" />
+
+  <div className="absolute bottom-20 right-20 h-96 w-96 rounded-full bg-yellow-300/10 blur-[150px] pointer-events-none" />
+
+     <div className="flex relative z-10">
         {/* Sidebar */}
        <nav className="mt-12 space-y-4">
   <Link
@@ -193,12 +201,12 @@ const fetchRepos = async () => {
     Deployments
   </Link>
 
-  <Link
-    href="/dashboard/settings"
-    className="block rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5"
-  >
-    Settings
-  </Link>
+ <Link
+  href="/dashboard/setting"
+  className="block rounded-xl px-4 py-3 text-gray-400 hover:bg-white/5 transition-all duration-300"
+>
+  Settings
+</Link>
 </nav>
 
         {/* Main Content */}

@@ -1,23 +1,38 @@
+import Link from "next/link";
+
 export default function Navbar() {
   return (
-    <nav className="sticky top-0 z-50 flex justify-between items-center px-8 py-6 border-b border-yellow-300/20 bg-black/70 backdrop-blur-md">
-      <h1 className="text-2xl font-bold text-yellow-300">QuickLive</h1>
+    <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-yellow-300/20 bg-black/70 px-8 py-6 backdrop-blur-md">
+      {/* Logo */}
+      <Link
+        href="/"
+        className="text-2xl font-bold text-yellow-300 transition hover:text-yellow-200"
+      >
+        QuickLive
+      </Link>
 
-      <div className="hidden md:flex gap-8 text-gray-300">
-        <a href="#" className="hover:text-yellow-300 transition">
+      {/* Navigation */}
+      <div className="hidden gap-8 text-gray-300 md:flex">
+        <a href="#features" className="transition hover:text-yellow-300">
           Features
         </a>
-        <a href="#" className="hover:text-yellow-300 transition">
+
+        <a href="#pricing" className="transition hover:text-yellow-300">
           Pricing
         </a>
-        <a href="#" className="hover:text-yellow-300 transition">
-          Docs
+
+        <a href="#how-it-works" className="transition hover:text-yellow-300">
+          How It Works
         </a>
       </div>
 
-      <button className="rounded-full bg-yellow-300 px-5 py-2 font-semibold text-black hover:shadow-lg hover:shadow-yellow-300/40 transition">
+      {/* Deploy Button */}
+      <Link
+        href="/login"
+        className="rounded-full bg-yellow-300 px-5 py-2 font-semibold text-black transition hover:scale-105 hover:shadow-lg hover:shadow-yellow-300/40"
+      >
         Deploy Now
-      </button>
+      </Link>
     </nav>
   );
 }
